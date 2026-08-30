@@ -75,6 +75,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'fa-ir' # -> فارسی شدن پنل مدیریت
 
 TIME_ZONE = 'UTC'
 

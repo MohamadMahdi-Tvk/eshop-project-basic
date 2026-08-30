@@ -10,7 +10,7 @@ class Product(models.Model):
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0)
     short_description = models.CharField(max_length=360, null=True)
     is_active = models.BooleanField(default=False)
-    slug = models.SlugField(default="", null=False, db_index=True)  # samsung galaxy s 20 -> samsung-galaxy-s-20
+    slug = models.SlugField(default="", null=False, db_index=True, blank=True)
 
     def __str__(self):
         return f"{self.title} ({self.price})"
@@ -252,7 +252,7 @@ class Product(models.Model):
 # برای مابقی آیتم ها هم همین کار را میکنیم
 
 # ----------------------------------------------------------------------------------------------------------------------
-# db_index = True -> slug = models.SlugField(default="", null=False, db_index=True):
+# db_index = True -> slug = models.SlugField(default="", null=False, db_index=True, blank=True, editable=False)
 
 # ما از این فیلد زیاد استفاده میکنیم، مخصوصا در واکشی اطلاعات زمانی که آنرا میدهیم تا آن آبجکت را پیدا کنیم
 # زمانی که ما مقدار db_index را روی True تنظیم میکنیم، نحوه ی واکشی اطلاعات رو جور دیگری درنظر میگیرد، یعنی باعث میشه دیتای ما
@@ -261,5 +261,7 @@ class Product(models.Model):
 # هر فیلدی رو نباید index کنیم، زیرا هرچقدر تعداد ایندکس ها بیشتر باشد، میزان پرفرمنس کوئری ما کاهش پیدا میکند
 # ترجیحا باید روی فیلد هایی این کار را انجام بدیم که مطمئن هستیم روی اون فیلد، کوئری های زیادی قرار هست انجام شود
 # مثلا همین slug field زیاد برای واکشی اطلاعات استفاده میشود به همین دلیل db_index=True قرار داده ایم
+# blank = True -> میتونه فیلدش در زمان پر کردن مقادیر کلاس مدل، خالی باشد
+# editable = False -> یعنی امکان ویرایش این فیلد وجود نداشته باشد، در پنل ادمین این فیلد حذف میشود
 
 # ----------------------------------------------------------------------------------------------------------------------
