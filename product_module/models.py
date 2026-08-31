@@ -12,6 +12,11 @@ class ProductCategory(models.Model):
     def __str__(self):
         return f'( {self.title} - {self.url_title} )'
 
+    class Meta:
+        verbose_name = 'دسته بندی'
+        verbose_name_plural = 'دسته بندی ها'
+
+
 #ایجاد کلاسی صرفا برای یادگیری رابطه یک به یک:
 class ProductInformation(models.Model):
     color = models.CharField(max_length=200, verbose_name='رنگ')
@@ -20,19 +25,28 @@ class ProductInformation(models.Model):
     def __str__(self):
         return f'{self.size} - {self.color}'
 
+    class Meta:
+        verbose_name = 'اطلاعات تکمیلی'
+        verbose_name_plural = 'تمامی اطلاعات تکمیلی'
+
+
 
 class Product(models.Model):
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, verbose_name='عنوان')
     product_information = models.OneToOneField(ProductInformation, on_delete=models.CASCADE, null=True, blank=True, related_name='product_information', verbose_name='اطلاعات تکمیلی')
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=True, related_name='products', verbose_name='دسته بندی')
-    price = models.IntegerField()
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0)
-    short_description = models.CharField(max_length=360, null=True)
-    is_active = models.BooleanField(default=False)
+    price = models.IntegerField(verbose_name='قیمت')
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0, verbose_name='امتیاز')
+    short_description = models.CharField(max_length=360, null=True, verbose_name='توضیحات کوتاه')
+    is_active = models.BooleanField(default=False, verbose_name= 'وضعیت')
     slug = models.SlugField(default="", null=False, db_index=True, blank=True)
 
     def __str__(self):
         return f"{self.title} ({self.price})"
+
+    class Meta:
+        verbose_name = 'محصول'
+        verbose_name_plural = 'محصولات'
 
     def get_absolute_url(self):
         return reverse('product_detail', args=[self.slug])
@@ -362,4 +376,9 @@ class Product(models.Model):
 # فقط و فقط یک محصول درنظر گرفته میشود، و اگر بخواهیم اعمال شود، باید اطلاعات تکمیلی آن یکی محصول را نال و خالی کرده
 # و سپس آن اطلاعات تکمیلی را برای این یکی محصول انتخاب کنیم
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Class Meta:
 
+# این کلاس را میتوان داخل کلاس مدل ایجاد کرد؛ وظیفه آن کانفیگ کردن دستورات اضافی برای کلاس مدل است؛ چندتا آیتم
+# درون این کلاس وجود دارد که جنگو آنها را شناسایی میکند، مثلا verbose_name، نام جایگزین آیتم نمایشی داخل ادمین بصورت تکی هست
+# و verbose_name_plural، اسم جمع آن هست و میتوان هرکدام را مقداردهی کرد
