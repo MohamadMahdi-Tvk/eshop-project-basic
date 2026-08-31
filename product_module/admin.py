@@ -11,9 +11,10 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['rating', 'is_active']
     list_editable = ['rating', 'is_active']
 
-
-admin.site.register(models.Product, ProductAdmin)  # معرفی کلاس مدل خود به جنگو ادمین
+# معرفی کلاس های مدل خود به جنگو ادمین
+admin.site.register(models.Product, ProductAdmin)
 admin.site.register(models.ProductCategory)
+admin.site.register(models.ProductInformation)
 
 # ----------------------------------------------------------------------------------------------------------
 # class ProductAdmin(admin.ModelAdmin): نحوه نامگذاری براساس قرارداد به این شکل هست

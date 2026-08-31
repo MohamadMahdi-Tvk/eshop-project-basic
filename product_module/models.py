@@ -12,10 +12,19 @@ class ProductCategory(models.Model):
     def __str__(self):
         return f'( {self.title} - {self.url_title} )'
 
+#ایجاد کلاسی صرفا برای یادگیری رابطه یک به یک:
+class ProductInformation(models.Model):
+    color = models.CharField(max_length=200, verbose_name='رنگ')
+    size = models.CharField(max_length=200, verbose_name='سایز')
+
+    def __str__(self):
+        return f'{self.size} - {self.color}'
+
 
 class Product(models.Model):
     title = models.CharField(max_length=300)
-    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=True, related_name='products')
+    product_information = models.OneToOneField(ProductInformation, on_delete=models.CASCADE, null=True, blank=True, related_name='product_information', verbose_name='اطلاعات تکمیلی')
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=True, related_name='products', verbose_name='دسته بندی')
     price = models.IntegerField()
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0)
     short_description = models.CharField(max_length=360, null=True)
@@ -338,3 +347,19 @@ class Product(models.Model):
 # mobile.products.get(title='iphone 12')
 
 # ----------------------------------------------------------------------------------------------------------------------
+# رابطه ی یک به یک:
+
+# در این پروژه، مثلا یک مدل جدید داریم به اسم ProductInformation که با خود مدل Product رابطه ی یک به یک دارد
+# اینجور که هر Product یک ProductInformation دارد و هر ProductInformation مربوط به یک Product است
+# براساس قاعده میایم و اون فیلد و رابطه رو در مدل اصلی خود پیاده سازی میکنیم، چون Product ما مدل اصلی
+# این ماژول هست و بهترین کار این است که داخل همین بیایم و رابطه ها را معرفی کنیم، چون که اگر Product وجود نداشته
+# باشه، عملا ProductInformation هم وجود نخواهد داشت؛ پس داخل Product فیلد رابطه رو ایجاد میکنیم:
+# product_information = models.OneToOneField(ProductInformation, on_delete=models.CASCADE, null=True, blank=True, related_name='product_information', verbose_name='اطلاعات تکمیلی')
+# و برای اعمال تغییرات مایگریشن رو اعمال میکنیم
+
+# اگر در پنل ادمین برای محصولی یک اطلاعات تکمیلی در نظر بگیریم و ذخیره کنیم، دیگر نمیتوانیم برای محصول دیگری
+# آن اطلاعات تکمیلی را انتخاب کنیم و به ما ارور میدهد، به این دلیل که رابطه یک به یک است و هر اطلاعات تکمیلی برای
+# فقط و فقط یک محصول درنظر گرفته میشود، و اگر بخواهیم اعمال شود، باید اطلاعات تکمیلی آن یکی محصول را نال و خالی کرده
+# و سپس آن اطلاعات تکمیلی را برای این یکی محصول انتخاب کنیم
+
+
