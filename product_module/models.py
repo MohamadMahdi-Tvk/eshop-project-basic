@@ -4,8 +4,18 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 
+# ایجاد کلاس مدل دسته بندی محصولات:
+class ProductCategory(models.Model):
+    title = models.CharField(max_length=300, verbose_name="عنوان")
+    url_title = models.CharField(max_length=300, verbose_name="عنوان در url")
+
+    def __str__(self):
+        return f'( {self.title} - {self.url_title} )'
+
+
 class Product(models.Model):
     title = models.CharField(max_length=300)
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=True, related_name='products')
     price = models.IntegerField()
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0)
     short_description = models.CharField(max_length=360, null=True)
@@ -263,5 +273,68 @@ class Product(models.Model):
 # مثلا همین slug field زیاد برای واکشی اطلاعات استفاده میشود به همین دلیل db_index=True قرار داده ایم
 # blank = True -> میتونه فیلدش در زمان پر کردن مقادیر کلاس مدل، خالی باشد
 # editable = False -> یعنی امکان ویرایش این فیلد وجود نداشته باشد، در پنل ادمین این فیلد حذف میشود
+
+# ----------------------------------------------------------------------------------------------------------------------
+# ایجاد رابطه یک به چند بین مدل های Product و ProductCategory:
+
+# باید در یکی از مدل ها فیلدی درنظر بگیریم که ما در Product درنظر میگیریم:
+# category = models.ForeignKey(to, on_delete)
+# to -> یعنی با کدام جدول متصل شود
+# on_delete -> مشخص میکند اگر دسته بندی حذف شود، چه بلایی سر دیتاهایی که در این دسته بندی هستند بیاد
+# on_delete = models.CASCADE -> وقتی دسته بندی حذف شود، دیتاهایی هم که داخل آن دسته بندی هستند حذف میشوند
+# on_delete = models.SETNULL -> زمانی که دسته بندی حذف شود، مقدار را نال در نظر میگیرد
+# on_delete = models.PROTECT -> در صورت حذف دسته بندی، دیتا محافظت میشود و باقی میماند
+# متداول ترین حالت حذف CASCADE هست
+
+# ----------------------------------------------------------------------------------------------------------------------
+# نحوه ی ایجاد دیتا در محیط Shell در دو جدولی که باهمدیگر ارتباط دارند:
+
+# 1. from product_module.models import Product, ProductCategory
+# 2. mobile = ProductCategory(title='موبایل', url_title='mobile')
+# 3. mobile.save()
+# 4. apple = Product(title='iphone 12', price=20000000, rating=3, short_description='short description',is_active=True, category=mobile)
+# 5. apple.save()
+# در مرحله 4، اومدیم مستقیم خود mobile که در بالا بعنوان category دادیم به نمونه کلاس مدل، و خودش تشخیص
+# میدهد و در جدول میاد category_id آن را ذخیره میکند
+# فیلد category همان فیلد مربوط به relation ماست
+
+# بدست آوردن عنوان دسته بندی از طریق فیلد category که فیلد ارتباطی مدل است:
+# 1. from product_module.models import Product, ProductCategoryپ
+# 2. iphone = Product.objects.all()[0]
+# 3. iphone.category.title
+# عملا ما از داخل محصول، به دسته بندی که آن محصول دارد، دسترسی داریم و میتونیم فیلد های آن را واکشی کنیم
+
+# ----------------------------------------------------------------------------------------------------------------------
+# نحوه ی واکشی اطلاعات در محیط Shell در دو جدولی که با همدیگر رابطه دارند:
+
+# 1. from product_module.models import Product, ProductCategory
+# 2. product_by_category = Product.objects.filter(category__url_title='mobile') => محصولاتی رو بیار که در دسته بندی موبایل هستند
+# 3. product_by_category   => چاپ کن
+# 4. <QuerySet [<Product: iphone 12 (20000000)>]>  => خروجی
+
+# میتوان از دستورات دیگر هم در واکشی اطلاعات استفاده کرد مثلا:
+# product_by_category = Product.objects.filter(category__url_title__contains='play') => محصولاتی که دسته بندی آنها شامل کلمه پلی باشند رو بیار
+
+# بدست آوردن Product ها بوسیله ProductCategory:
+# mobile = ProductCategory.objects.get(url_title='mobile')  => واکشی دسته بندی که عنوان یوآرال آن موبایل باشد
+# mobile  => چاپ کن
+# <ProductCategory: موبایل>
+# mobile.product_set.all()  => product_set => برای خود جنگو است که اگر متد آل رو بعدش فراخوانی کنیم، محصولاتی که در این دسته بندی هستند رو واکشی میکند
+# <QuerySet [<Product: iphone 12 (20000000)>]>  => خروجی
+
+# product_set: اشاره میکند به همان رابطه ای که بین دسته بندی محصولات وجود دارد، این اسمی هست که پیش فرض خود جنگو درنظر گرفته
+# ولی میتوان آن را در خود فیلد مربوط به رابطه در قسمت related_name تعویض کرد:
+# category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=True, related_name='products')
+# البته چون مدل عوض شده باید یک مایگریشن جدید ایجاد کنیم
+# حالا میتونیم با اسم جدید به آن دسترسی داشته باشیم:
+# from product_module.models import Product, ProductCategory
+# mobile = ProductCategory.objects.get(url_title='mobile')
+# mobile
+# <ProductCategory: موبایل>
+# mobile.products.all()
+# <QuerySet [<Product: iphone 12 (20000000)>]>
+
+# میتوان بجز فانکشن all فانکشن get و filter یا دیگر فانشکن ها هم اعمال کرد:
+# mobile.products.get(title='iphone 12')
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -1,10 +1,18 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product  # . -> اشاره به اپ یا ماژولی که داخلش هستیم
+from .models import Product, ProductCategory  # . -> اشاره به اپ یا ماژولی که داخلش هستیم
 from django.http import Http404
 from django.db.models import Avg, Min, Max  # ماژول برای بدست آوردن میانگین، ماکزیمم، مینیموم و...
 
 
 def product_list(request):
+    # ------------------------------------------------------------------------------------------------------
+    # افزودن یک دسته بندی و سپس یک محصول به آن (در هر بار اجرای برنامه ساخته میشوند)
+    # console = ProductCategory(title='پلی استیشن', url_title="playstation")
+    # console.save()
+    # ps_4 = Product(title='play station 4', price=16000000, category=console, short_description='ps_4', rating=4)
+    # ps_4.save()
+    # ------------------------------------------------------------------------------------------------------
+
     products = Product.objects.all().order_by('-price')
     number_of_products = products.count()  # بدست آوردن تعداد کل محصولات
     avg_rating = products.aggregate(Avg("rating"))  # بدست آوردن میانگین
