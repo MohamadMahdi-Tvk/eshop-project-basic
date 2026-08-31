@@ -15,6 +15,7 @@ class ProductAdmin(admin.ModelAdmin):
 admin.site.register(models.Product, ProductAdmin)
 admin.site.register(models.ProductCategory)
 admin.site.register(models.ProductInformation)
+admin.site.register(models.ProductTag)
 
 # ----------------------------------------------------------------------------------------------------------
 # class ProductAdmin(admin.ModelAdmin): نحوه نامگذاری براساس قرارداد به این شکل هست
@@ -39,3 +40,6 @@ admin.site.register(models.ProductInformation)
 # فیلد های مورد نظر در قالب یک لیست به آن معرفی میکنیم
 
 # ----------------------------------------------------------------------------------------------------------
+# username & password for admin panel:
+# username: mohamadmahdi
+# password: 123456

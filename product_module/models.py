@@ -4,6 +4,18 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 
+# ایجاد کلاس برای یادگیری رابطه چند به چند:
+class ProductTag(models.Model):
+    tag = models.CharField(max_length=300, verbose_name='عنوان')
+
+    class Meta:
+        verbose_name = 'تگ محصول'
+        verbose_name_plural = 'تگ های محصولات'
+
+    def __str__(self):
+        return self.tag
+
+
 # ایجاد کلاس مدل دسته بندی محصولات:
 class ProductCategory(models.Model):
     title = models.CharField(max_length=300, verbose_name="عنوان")
@@ -17,7 +29,7 @@ class ProductCategory(models.Model):
         verbose_name_plural = 'دسته بندی ها'
 
 
-#ایجاد کلاسی صرفا برای یادگیری رابطه یک به یک:
+#ایجاد کلاسی برای یادگیری رابطه یک به یک:
 class ProductInformation(models.Model):
     color = models.CharField(max_length=200, verbose_name='رنگ')
     size = models.CharField(max_length=200, verbose_name='سایز')
@@ -35,6 +47,7 @@ class Product(models.Model):
     title = models.CharField(max_length=300, verbose_name='عنوان')
     product_information = models.OneToOneField(ProductInformation, on_delete=models.CASCADE, null=True, blank=True, related_name='product_information', verbose_name='اطلاعات تکمیلی')
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=True, related_name='products', verbose_name='دسته بندی')
+    product_tags = models.ManyToManyField(ProductTag, verbose_name='تگ های محصول')
     price = models.IntegerField(verbose_name='قیمت')
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0, verbose_name='امتیاز')
     short_description = models.CharField(max_length=360, null=True, verbose_name='توضیحات کوتاه')
@@ -382,3 +395,40 @@ class Product(models.Model):
 # این کلاس را میتوان داخل کلاس مدل ایجاد کرد؛ وظیفه آن کانفیگ کردن دستورات اضافی برای کلاس مدل است؛ چندتا آیتم
 # درون این کلاس وجود دارد که جنگو آنها را شناسایی میکند، مثلا verbose_name، نام جایگزین آیتم نمایشی داخل ادمین بصورت تکی هست
 # و verbose_name_plural، اسم جمع آن هست و میتوان هرکدام را مقداردهی کرد
+
+# ----------------------------------------------------------------------------------------------------------------------
+# رابطه ی چند به چند:
+
+# مثال این نوع رابطه میتواند، رابطه ی بین مدل های یک محصول با برچسب ها یا تگ های آن محصول باشد
+# یعنی یک محصول میتواند لیستی از تگ ها را داشته باشد، از آن طرف هر تگ میتواند برای چندین محصول باشد و لیستی از محصولات را شامل شود
+# هرکدام از طرفین یک رابطه ی یک به چند با طرف مقابل خودش دارد
+# فیلد رابطه را هم طبق قاعده در مدل Product ایجاد میکنیم و با فانکشن ManyToManyField میتوان ایجاد کرد
+
+# نکته: در این رابطه برعکس دو رابطه قبلی، از on_delete استفاده نمیشود؛ در رابطه یک به یک و یک به چند، اطلاعات رابطه در یک سمت رابطه
+# ذخیره میشود، یعنی یک طرف، آیدی اون کلید خارجی رو در خودش نگهداری میکند، اما در رابطه چند به چند این اتفاق نمیفتد
+# و جنگو بصورت اتوماتیک، بجای اینکه دو جدول درگیر کند، یک جدول واسط ایجاد میکند و اطلاعاتی که لازم دارد را آنجا ذخیره میکند
+# به همین دلیل نیاز به دستور on_delete نداریم:
+# product_tags = models.ManyToManyField(ProductTag, verbose_name='تگ های محصول')
+# سپس مایگریشن زده تا دیتابیس آپدیت شود و میتوانیم در پنل ادمین تگ یا تگ هایی ایجاد کرده و به محصولات یک یا چند تگ بدهیم
+
+# ----------------------------------------------------------------------------------------------------------------------
+# کار با مدل هایی که رابطه چند به چند دارند در محیط Shell (کار با آن مثل دو رابطه قبلی نیست و کمی متفاوت است)
+
+# 1. from product_module.models import Product, ProductTag  => ایمپورت کردن کلاس های مدل درون شل پایتون کنسول
+# 2. ProductTag.objects.all()  => بدست آوردن کل تگ ها
+# 3. Product.objects.all()  => بدست آوردن کل محصولات
+# 4. iphone = Product.objects.all()[0]  => بدست آوردن آیتم اول لیست محصولات
+# 5. iphone.product_tags.all()  => واکشی تمامی تگ هایی که آیفون دارد
+# 6. iphone_tag = ProductTag(tag='iphone')  => ایجاد یک تگ جدید
+# 7. iphone_tag.save()  => ذخیره تگ در دیتابیس
+# 8. iphone.product_tags.add(iphone_tag)  => افزودن تگی که خط قبلی ایجاد کردیم به آیفون
+# 9. iphone.product_tags.all()  => دوباره تگ های آیفون را واکشی میکنیم و میبینیم که تگی که ساخته بودیم اضافه شده
+
+# بدست آوردن لیست محصولاتی که یک تگی دارند:
+# ProductTag.objects.all()  => بدست آوردن کل تگ ها
+# mobile = ProductTag.objects.all()[0]  => گرفتن آیتم اول از لیست تگ ها که موبایل است
+# mobile.product_set.all()  => بدست آوردن لیست محصولات
+# product_set: اشاره میکنه به جدول پروداکت (چون برای حالتی که از پروداکت تگ میایم اسمی قرار ندادیم)
+# با اسم پیش فرض خودش بهش دسترسی داریم
+
+# ----------------------------------------------------------------------------------------------------------------------
